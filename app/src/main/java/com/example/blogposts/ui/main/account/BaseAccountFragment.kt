@@ -68,6 +68,10 @@ abstract class BaseAccountFragment : Fragment(), Injectable{
 
     private fun isViewModelInitialized() = ::viewModel.isInitialized
 
+    /**
+     * !IMPORTANT!
+     * Must save ViewState b/c in event of process death the LiveData in ViewModel will be lost
+     */
     override fun onSaveInstanceState(outState: Bundle) {
         if (isViewModelInitialized()) {
             outState.putParcelable(
@@ -79,6 +83,9 @@ abstract class BaseAccountFragment : Fragment(), Injectable{
     }
 
     fun cancelActiveJobs() {
+        // When a fragment is destroyed make sure to cancel any on-going requests.
+        // Note: If you wanted a particular request to continue even if the fragment was destroyed, you could write a
+        //       special condition in the repository or something.
         viewModel.cancelActiveJobs()
     }
 

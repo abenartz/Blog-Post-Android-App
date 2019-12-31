@@ -49,7 +49,7 @@ class AccountRepository
             }
 
             override fun createCall(): LiveData<GenericApiResponse<AccountProperties>> {
-                return openApiMainService.getAccountProperties("Token ${authToken.token}")
+                return openApiMainService.getAccountProperties("Token ${authToken.token!!}")
             }
 
             override fun loadFromCache(): LiveData<AccountViewState> {

@@ -20,7 +20,8 @@
         toos:replace="android:supportsRtl"
         >
 
-        <activity android:name=".ui.auth.AuthActivity"
+        <activity
+            android:name=".ui.auth.AuthActivity"
             android:windowSoftInputMode="adjustPan">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>

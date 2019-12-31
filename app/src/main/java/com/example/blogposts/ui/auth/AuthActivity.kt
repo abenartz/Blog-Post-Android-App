@@ -14,6 +14,7 @@ import com.example.blogposts.R
 import com.example.blogposts.ui.BaseActivity
 import com.example.blogposts.ui.auth.state.AuthStateEvent
 import com.example.blogposts.ui.main.MainActivity
+import com.example.blogposts.util.SuccessHandling.Companion.RESPONSE_CHECK_PREVIOUS_AUTH_USER_DONE
 import com.example.blogposts.viewmodels.ViewModelProviderFactory
 import com.google.android.material.appbar.AppBarLayout
 import kotlinx.android.synthetic.main.activity_auth.*
@@ -21,11 +22,21 @@ import javax.inject.Inject
 
 class AuthActivity : BaseActivity() , NavController.OnDestinationChangedListener{
 
+    override fun onDestinationChanged(
+        controller: NavController,
+        destination: NavDestination,
+        arguments: Bundle?
+    ) {
+        viewModel.cancelActiveJobs()
+    }
+
     @Inject
-    lateinit var providerFactory: ViewModelProviderFactory
+    lateinit var providerFactory: ViewModelProvider.Factory
+
     lateinit var viewModel: AuthViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_auth)
 
@@ -40,64 +51,75 @@ class AuthActivity : BaseActivity() , NavController.OnDestinationChangedListener
         checkPreviousAuthUser()
     }
 
-    override fun onDestinationChanged(
-        controller: NavController,
-        destination: NavDestination,
-        arguments: Bundle?
-    ) {
-        viewModel.cancelActiveJobs()
-    }
+    private fun subscribeObservers(){
 
-    private fun subscribeObservers() {
         viewModel.dataState.observe(this, Observer { dataState ->
             onDataStateChange(dataState)
             dataState.data?.let { data ->
                 data.data?.let { event ->
                     event.getContentIfNotHandled()?.let {
                         it.authToken?.let {
-                            Log.d(TAG, "AuthActivity, Datastate: ${it}")
+                            Log.d(TAG, "AuthActivity, DataState: ${it}")
                             viewModel.setAuthToken(it)
+                        }
+                    }
+                }
+                data.response?.let{event ->
+                    event.peekContent().let{ response ->
+                        response.message?.let{ message ->
+                            if(message.equals(RESPONSE_CHECK_PREVIOUS_AUTH_USER_DONE)){
+                                onFinishCheckPreviousAuthUser()
+                            }
                         }
                     }
                 }
             }
         })
 
-        viewModel.viewState.observe(this,  Observer {
+        viewModel.viewState.observe(this, Observer{
             Log.d(TAG, "AuthActivity, subscribeObservers: AuthViewState: ${it}")
-            it.authToken?.let {
+            it.authToken?.let{
                 sessionManager.login(it)
             }
         })
 
-        sessionManager.cachedToken.observe(this, Observer {authToken ->
-            Log.d(TAG, "AuthActivity: subscribeObservers: AuthToken: ${authToken}" )
-            if (authToken != null && authToken.account_pk !=  -1 && authToken.token != null) {
-                navMainActivity()
+        sessionManager.cachedToken.observe(this, Observer{ dataState ->
+            Log.d(TAG, "AuthActivity, subscribeObservers: AuthDataState: ${dataState}")
+            dataState.let{ authToken ->
+                if(authToken != null && authToken.account_pk != -1 && authToken.token != null){
+                    navMainActivity()
+                }
             }
         })
     }
 
-    private fun checkPreviousAuthUser() {
-        viewModel.setStateEvent(AuthStateEvent.CheckPreviousAuthEvent())
-    }
-
-    private fun navMainActivity() {
+    fun navMainActivity(){
+        Log.d(TAG, "navMainActivity: called.")
         val intent = Intent(this, MainActivity::class.java)
         startActivity(intent)
         finish()
     }
 
-    override fun displayProgressBar(bool: Boolean) {
-        if (bool) {
+    private fun checkPreviousAuthUser(){
+        viewModel.setStateEvent(AuthStateEvent.CheckPreviousAuthEvent())
+    }
+
+    private fun onFinishCheckPreviousAuthUser(){
+        fragment_container.visibility = View.VISIBLE
+    }
+
+    override fun displayProgressBar(bool: Boolean){
+        if(bool){
             progress_bar.visibility = View.VISIBLE
-        } else {
-            progress_bar.visibility = View.INVISIBLE
+        }
+        else{
+            progress_bar.visibility = View.GONE
         }
     }
 
     override fun expandAppbar() {
-        // Ignore
+        // ignore
     }
+
 
 }

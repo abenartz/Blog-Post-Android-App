@@ -9,6 +9,7 @@ import androidx.lifecycle.MutableLiveData
 import com.example.blogposts.models.AuthToken
 import com.example.blogposts.persistence.AuthTokenDao
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.GlobalScope
@@ -36,25 +37,27 @@ constructor(
         setValue(newValue)
     }
 
-    fun logout() {
-        Log.d(TAG, "logout...")
-        GlobalScope.launch(IO) {
-            var errMessage: String? = null
-            try {
-                _cachedToken.value!!.account_pk?.let {
-                    authTokenDao.nullifyToken(it)
+    fun logout(){
+        Log.d(TAG, "logout: ")
+
+        CoroutineScope(IO).launch{
+            var errorMessage: String? = null
+            try{
+                _cachedToken.value!!.account_pk?.let { authTokenDao.nullifyToken(it)
+                } ?: throw CancellationException("Token Error. Logging out user.")
+            }catch (e: CancellationException) {
+                Log.e(TAG, "logout: ${e.message}")
+                errorMessage = e.message
+            }
+            catch (e: Exception) {
+                Log.e(TAG, "logout: ${e.message}")
+                errorMessage = errorMessage + "\n" + e.message
+            }
+            finally {
+                errorMessage?.let{
+                    Log.e(TAG, "logout: ${errorMessage}" )
                 }
-            } catch (e: CancellationException) {
-                Log.e(TAG, "logout: ${e.message}" )
-                errMessage = e.message
-            } catch (e: Exception) {
-                Log.e(TAG, "logout: ${e.message}" )
-                errMessage = errMessage + "\n" + e.message
-            } finally {
-                errMessage?.let {
-                    Log.e(TAG, "logout: ${errMessage}")
-                }
-                Log.d(TAG, "logout: finally...")
+                Log.d(TAG, "logout: finally")
                 setValue(null)
             }
         }

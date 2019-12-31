@@ -25,10 +25,9 @@ class AccountFragment : BaseAccountFragment(){
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         setHasOptionsMenu(true)
 
-        change_password.setOnClickListener {
+        change_password.setOnClickListener{
             findNavController().navigate(R.id.action_accountFragment_to_changePasswordFragment)
         }
 
@@ -39,19 +38,15 @@ class AccountFragment : BaseAccountFragment(){
         subscribeObservers()
     }
 
-    override fun onResume() {
-        super.onResume()
-        viewModel.setStateEvent(AccountStateEvent.GetAccountPropertiesEvent)
-    }
-
-    private fun subscribeObservers() {
-        viewModel.dataState.observe(viewLifecycleOwner, Observer { dataState ->
-            if (dataState != null) {
-                stateChangeListener.onDataStateChange(dataState) // let base activity handle errors
+    private fun subscribeObservers(){
+        viewModel.dataState.observe(viewLifecycleOwner, Observer{ dataState ->
+            Log.d(TAG, "AccountFragment: DataState: $dataState")
+            stateChangeListener.onDataStateChange(dataState)
+            if(dataState != null){
                 dataState.data?.let { data ->
-                    data.data?.let { event ->
-                        event.getContentIfNotHandled()?.let { viewState ->
-                            viewState.accountProperties?.let { accountProperties ->
+                    data.data?.let{ event ->
+                        event.getContentIfNotHandled()?.let{ viewState ->
+                            viewState.accountProperties?.let{ accountProperties ->
                                 Log.d(TAG, "AccountFragment, DataState: ${accountProperties}")
                                 viewModel.setAccountPropertiesData(accountProperties)
                             }
@@ -61,30 +56,35 @@ class AccountFragment : BaseAccountFragment(){
             }
         })
 
-        viewModel.viewState.observe(viewLifecycleOwner, Observer { accountViewState ->
-            accountViewState?.let {
-                it.accountProperties?.let { accountProperties ->
-                    Log.d(TAG, "AccountFragment, ViewState: ${accountProperties}")
-                    setAccountDataFields(accountProperties)
+        viewModel.viewState.observe(viewLifecycleOwner, Observer{ viewState->
+            Log.d(TAG, "AccountFragment, ViewState: ${viewState}")
+            if(viewState != null){
+                viewState.accountProperties?.let{
+                    setAccountDataFields(it)
                 }
             }
         })
     }
 
-    private fun setAccountDataFields(accountProperties: AccountProperties) {
-        email?.text = accountProperties.email
-        username?.text = accountProperties.username
+    override fun onResume() {
+        super.onResume()
+        viewModel.setStateEvent(AccountStateEvent.GetAccountPropertiesEvent)
+    }
+
+    private fun setAccountDataFields(accountProperties: AccountProperties){
+        email?.setText(accountProperties.email)
+        username?.setText(accountProperties.username)
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        super.onCreateOptionsMenu(menu, inflater)
         inflater.inflate(R.menu.edit_view_menu, menu)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
+        when(item.itemId){
             R.id.edit -> {
                 findNavController().navigate(R.id.action_accountFragment_to_updateAccountFragment)
+                return true
             }
         }
         return super.onOptionsItemSelected(item)

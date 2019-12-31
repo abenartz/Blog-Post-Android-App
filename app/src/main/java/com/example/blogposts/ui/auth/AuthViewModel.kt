@@ -62,30 +62,27 @@ constructor(
         val update = getCurrentViewStateOrNew()
         if (update.registrationField == registrationFields) {
             return
-        } else {
-            update.registrationField = registrationFields
-            setViewState(update)
         }
+        update.registrationField = registrationFields
+        setViewState(update)
     }
 
     fun setLoginFields(loginFields: LoginFields) {
         val update = getCurrentViewStateOrNew()
         if (update.loginFields == loginFields) {
             return
-        } else {
-            update.loginFields = loginFields
-            setViewState(update)
         }
+        update.loginFields = loginFields
+        setViewState(update)
     }
 
     fun setAuthToken (authToken: AuthToken) {
         val update = getCurrentViewStateOrNew()
         if (update.authToken == authToken) {
             return
-        } else {
-            update.authToken = authToken
-            setViewState(update)
         }
+        update.authToken = authToken
+        setViewState(update)
     }
 
     override fun initNewViewState(): AuthViewState {

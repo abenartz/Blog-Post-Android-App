@@ -379,6 +379,12 @@ constructor(
             }
 
             override fun createCall(): LiveData<GenericApiResponse<BlogCreateUpdateResponse>> {
+                Log.e(TAG, "BlogRepository: createCall: " +
+                        "authToken: ${authToken.token}" +
+                        "\nslug: $slug" +
+                        "\ntitle: $title" +
+                        "\nbody: $body" +
+                        "\nimage: $image")
                 return openApiMainService.updateBlog(
                     authorization = "Token ${authToken.token!!}",
                     slug = slug,

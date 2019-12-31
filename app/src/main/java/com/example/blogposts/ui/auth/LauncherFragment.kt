@@ -39,7 +39,7 @@ class LauncherFragment : BaseAuthFragment() {
 
         focusable_view.requestFocus() // work around: request focus for invisible view for not marking the textView
 
-        Log.d(TAG, "LauncherFragment: ${viewModel.hashCode()}")
+//        Log.d(TAG, "LauncherFragment: ${viewModel.hashCode()}")
 
     }
 

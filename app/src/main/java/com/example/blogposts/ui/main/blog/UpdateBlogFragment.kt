@@ -13,14 +13,14 @@ import com.example.blogposts.R
 import com.example.blogposts.ui.*
 import com.example.blogposts.ui.main.blog.state.BlogStateEvent
 import com.example.blogposts.ui.main.blog.state.BlogStateEvent.*
+import com.example.blogposts.ui.main.blog.viewmodel.getUpdatedBlogUri
 import com.example.blogposts.ui.main.blog.viewmodel.onBlogPostUpdateSuccess
 import com.example.blogposts.ui.main.blog.viewmodel.setUpdatedBlogFields
-import com.example.blogposts.ui.main.create_blog.state.CreateBlogStateEvent
 import com.example.blogposts.util.Constants
+import com.example.blogposts.util.Constants.Companion.GALLERY_REQUEST_CODE
 import com.example.blogposts.util.ErrorHandling
 import com.theartofdev.edmodo.cropper.CropImage
 import com.theartofdev.edmodo.cropper.CropImageView
-import kotlinx.android.synthetic.main.fragment_create_blog.*
 import kotlinx.android.synthetic.main.fragment_update_blog.*
 import kotlinx.android.synthetic.main.fragment_update_blog.blog_body
 import kotlinx.android.synthetic.main.fragment_update_blog.blog_image
@@ -47,80 +47,146 @@ class UpdateBlogFragment : BaseBlogFragment(){
         subscribeObservers()
 
         image_container.setOnClickListener {
-            if (stateChangeListener.isStoragePermissionGranted()) {
+            if(stateChangeListener.isStoragePermissionGranted()){
                 pickFromGallery()
             }
         }
     }
 
-    private fun subscribeObservers() {
-        viewModel.dataState.observe(viewLifecycleOwner, Observer { dataState ->
-            if (dataState != null) {
-                stateChangeListener.onDataStateChange(dataState)
-                dataState.data?.let { data ->
-                    data.data?.getContentIfNotHandled()?.let {  blogViewState ->
+    private fun pickFromGallery() {
+        val intent = Intent(
+            Intent.ACTION_PICK,
+            android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+        )
+        intent.type = "image/*"
+        val mimeTypes = arrayOf("image/jpeg", "image/png", "image/jpg")
+        intent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes)
+        intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        startActivityForResult(intent, GALLERY_REQUEST_CODE)
+    }
 
-                        // if this is not null the blog post was updated
-                        blogViewState.viewBlogFields.blogPost?.let { blogPost ->
-                            viewModel.onBlogPostUpdateSuccess(blogPost).let {
-                                findNavController().popBackStack()
-                            }
+    private fun launchImageCrop(uri: Uri){
+        context?.let{
+            CropImage.activity(uri)
+                .setGuidelines(CropImageView.Guidelines.ON)
+                .start(it, this)
+        }
+    }
+
+    private fun showImageSelectionError(){
+        stateChangeListener.onDataStateChange(
+            DataState(
+                Event(StateError(
+                    Response(
+                        "Something went wrong with the image.",
+                        ResponseType.Dialog()
+                    )
+                )),
+                Loading(isLoading = false),
+                Data(Event.dataEvent(null), null)
+            )
+        )
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (resultCode == Activity.RESULT_OK) {
+            when (requestCode) {
+
+                GALLERY_REQUEST_CODE -> {
+                    data?.data?.let { uri ->
+                        activity?.let{
+                            launchImageCrop(uri)
+                        }
+                    }?: showImageSelectionError()
+                }
+
+                CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE -> {
+                    Log.d(TAG, "CROP: CROP_IMAGE_ACTIVITY_REQUEST_CODE")
+                    val result = CropImage.getActivityResult(data)
+                    val resultUri = result.uri
+                    Log.d(TAG, "CROP: CROP_IMAGE_ACTIVITY_REQUEST_CODE: uri: ${resultUri}")
+                    viewModel.setUpdatedBlogFields(
+                        title = null,
+                        body = null,
+                        uri = resultUri
+                    )
+                }
+
+                CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE -> {
+                    Log.d(TAG, "CROP: ERROR")
+                    showImageSelectionError()
+                }
+            }
+        }
+    }
+
+    fun subscribeObservers(){
+        viewModel.dataState.observe(viewLifecycleOwner, Observer { dataState ->
+            stateChangeListener.onDataStateChange(dataState)
+            dataState.data?.let{ data ->
+                data.data?.getContentIfNotHandled()?.let{ viewState ->
+
+                    // if this is not null, the blogpost was updated
+                    viewState.viewBlogFields.blogPost?.let{ blogPost ->
+                        viewModel.onBlogPostUpdateSuccess(blogPost).let {
+                            findNavController().popBackStack()
                         }
                     }
                 }
             }
+        })
 
-            viewModel.viewState.observe(viewLifecycleOwner, Observer {  viewState ->
-                viewState.updateBlogFields.let { updateBlogFields ->
-                    setBlogProperties(
-                        updateBlogFields.updatedBlogTitle,
-                        updateBlogFields.updatedBlogBody,
-                        updateBlogFields.updatedImageUri
-                    )
-                }
-            })
+        viewModel.viewState.observe(viewLifecycleOwner, Observer { viewState ->
+            viewState.updateBlogFields.let{ updatedBlogFields ->
+                setBlogProperties(
+                    updatedBlogFields.updatedBlogTitle,
+                    updatedBlogFields.updatedBlogBody,
+                    updatedBlogFields.updatedImageUri
+                )
+            }
         })
     }
 
-    private fun setBlogProperties(
-        updatedBlogTitle: String?,
-        updatedBlogBody: String?,
-        updatedImageUri: Uri?
-    ) {
+    fun setBlogProperties(title: String?, body: String?, image: Uri?){
         dependencyProvider.getGlideRequestManager()
-            .load(updatedImageUri)
+            .load(image)
             .into(blog_image)
-        blog_title.setText(updatedBlogTitle)
-        blog_body.setText(updatedBlogBody)
+        blog_title.setText(title)
+        blog_body.setText(body)
     }
 
-    private fun saveChanges() {
+    private fun saveChanges(){
         var multipartBody: MultipartBody.Part? = null
-        viewModel.viewState.value?.updateBlogFields?.updatedImageUri?.let { imageUri ->
-            imageUri.path?.let { filePath ->
+        viewModel.getUpdatedBlogUri()?.let{ imageUri ->
+            imageUri.path?.let{filePath ->
                 val imageFile = File(filePath)
-                Log.d(TAG, "UpdateBlogFragment: imageFile: $imageFile")
-                val requestBody = RequestBody.create(
-                    MediaType.parse("image/*"),
-                    imageFile
-                )
-                multipartBody = MultipartBody.Part.createFormData(
-                    "image",
-                    imageFile.name,
-                    requestBody
-                )
+                Log.d(TAG, "UpdateBlogFragment, imageFile: file: ${imageFile}")
+                if(imageFile.exists()){
+                    val requestBody =
+                        RequestBody.create(
+                            MediaType.parse("image/*"),
+                            imageFile
+                        )
+                    // name = field name in serializer
+                    // filename = name of the image file
+                    // requestBody = file with file type information
+                    multipartBody = MultipartBody.Part.createFormData(
+                        "image",
+                        imageFile.name,
+                        requestBody
+                    )
+                }
             }
         }
-        multipartBody?.let {
-            viewModel.setStateEvent(
-                UpdateBlogPostEvent(
-                    blog_title.text.toString(),
-                    blog_body.text.toString(),
-                    it
-                )
+        viewModel.setStateEvent(
+            UpdateBlogPostEvent(
+                blog_title.text.toString(),
+                blog_body.text.toString(),
+                multipartBody
             )
-            stateChangeListener.hideSoftKeyboard()
-        }?: showErrorDialog(ErrorHandling.ERROR_MUST_SELECT_IMAGE)
+        )
+        stateChangeListener.hideSoftKeyboard()
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -128,8 +194,7 @@ class UpdateBlogFragment : BaseBlogFragment(){
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-
-        when(item.itemId) {
+        when(item.itemId){
             R.id.save -> {
                 saveChanges()
                 return true
@@ -141,70 +206,9 @@ class UpdateBlogFragment : BaseBlogFragment(){
     override fun onPause() {
         super.onPause()
         viewModel.setUpdatedBlogFields(
+            uri = null,
             title = blog_title.text.toString(),
-            body = blog_body.text.toString(),
-            uri = null
+            body = blog_body.text.toString()
         )
     }
-
-    private fun pickFromGallery() {
-        val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
-        intent.type = "image/*"
-        val mimeTypes = arrayOf("image/jpeg", "image/png", "image/jpg")
-        intent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes)
-        intent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
-        startActivityForResult(intent, Constants.GALLERY_REQUEST_CODE)
-    }
-
-    private fun launchImageCrop(uri: Uri?) {
-        context?.let {
-            CropImage.activity(uri)
-                .setGuidelines(CropImageView.Guidelines.ON)
-                .start(it, this)
-        }
-    }
-
-    private fun showErrorDialog(errorMessage: String) {
-        stateChangeListener.onDataStateChange(
-            DataState(
-                Event(
-                    StateError(
-                        Response(errorMessage, ResponseType.Dialog())
-                    )
-                ),
-                Loading(false),
-                Data(Event.dataEvent(null), null)
-            )
-        )
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (resultCode == Activity.RESULT_OK) {
-            when(requestCode) {
-
-                Constants.GALLERY_REQUEST_CODE -> {
-                    data?.data?.let { uri ->
-                        activity?.let {
-                            launchImageCrop(uri)
-                        }
-                    }?: showErrorDialog(ErrorHandling.ERROR_SOMETHING_WRONG_WITH_IMAGE)
-                }
-
-                CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE -> {
-                    Log.d(TAG, "CROP: CROP_IMAGE_ACTIVITY_REQUEST_CODE")
-                    val result = CropImage.getActivityResult(data)
-                    val resultUri = result.uri
-                    Log.d(TAG, "CROP: CROP_IMAGE_ACTIVITY_REQUEST_CODE: uri: $resultUri")
-                    viewModel.setUpdatedBlogFields(
-                        title = null,
-                        body = null,
-                        uri = resultUri
-                    )
-                }
-            }
-        }
-    }
-
-
 }

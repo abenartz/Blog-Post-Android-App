@@ -255,14 +255,16 @@ constructor(
                         if (accountProperties.pk > -1) {
                             authTokenDao.searchByPk(accountProperties.pk).let { authToken ->
                                 if (authToken != null) {
-                                    onCompleteJob(
-                                        DataState.data(
-                                            data = AuthViewState(
-                                                authToken = authToken
+                                    if(authToken.token != null) {
+                                        onCompleteJob(
+                                            DataState.data(
+                                                data = AuthViewState(
+                                                    authToken = authToken
+                                                )
                                             )
                                         )
-                                    )
-                                    return
+                                        return
+                                    }
                                 }
                             }
                         }

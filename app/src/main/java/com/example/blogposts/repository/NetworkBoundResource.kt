@@ -39,10 +39,10 @@ abstract class NetworkBoundResource <ResponseObject, CacheObject, ViewStateType>
 
         if (shouldLoadingFromCache) {
             val dbSource = loadFromCache()
-            result.addSource(dbSource, Observer {
+            result.addSource(dbSource){
                 result.removeSource(dbSource)
-                setValue(DataState.loading(true, it))
-            })
+                setValue(DataState.loading(isLoading = true, cachedData = it))
+            }
         }
 
         if (isNetworkRequest) {

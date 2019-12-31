@@ -57,6 +57,7 @@ interface OpenApiMainService {
     ): LiveData<GenericApiResponse<GenericResponse>>
 
     // PUT is request for updating old data at the server
+    // multipart doesn't send value string to server
     @Multipart
     @PUT("blog/{slug}/update")
     fun updateBlog(
@@ -64,18 +65,29 @@ interface OpenApiMainService {
         @Path("slug") slug: String,
         @Part("title") title: RequestBody,
         @Part("body") body: RequestBody,
-        @Part image: MultipartBody.Part? // multipart doesn't send value string to server
+        @Part image: MultipartBody.Part?
     ): LiveData<GenericApiResponse<BlogCreateUpdateResponse>>
 
     // POST is request for creating new data at the server
+    // multipart doesn't send value string to server
     @Multipart
     @POST("blog/create")
     fun createBlog(
         @Header("Authorization") authorization: String,
         @Part("title") title: RequestBody,
         @Part("body") body: RequestBody,
-        @Part image: MultipartBody.Part? // multipart doesn't send value string to server
+        @Part image: MultipartBody.Part?
     ): LiveData<GenericApiResponse<BlogCreateUpdateResponse>>
 
 
 }
+
+
+
+
+
+
+
+
+
+

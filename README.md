@@ -2,12 +2,15 @@ This is a Jetpack Architecture based Android App of posting and reading other us
 The App interacts with the website "open-api.xyz" (sandbox website for the App rest-api).
 
 Structure:
+
 Authorizatio section -
+
     Login screen, 
     New registration screen,
     Forgot Password (WebView fragment)
     
 Main section - 
+
     Posts feed screen,
     Create new post screen (select photo from internal storage, crop and uplaod to the server),
     Account screen

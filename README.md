@@ -22,14 +22,13 @@ The App interacts with the website "open-api.xyz" (sandbox website for the App r
 1. Kotlin:
 
 2. Coroutines:
-
-* Advanced coroutine management using jobs  
-* Cancelling active jobs
-* Coroutine scoping
+    * Advanced coroutine management using jobs  
+    * Cancelling active jobs
+    * Coroutine scoping
     
 3. Navigation Components:
-* Bottom Navigation View with fragments  
-* Leveraging multiple navigation graphs
+    * Bottom Navigation View with fragments  
+    * Leveraging multiple navigation graphs
     
 4. Dagger 2:
 * custom scopes, fragment injection, activity injection, Viewmodel injection

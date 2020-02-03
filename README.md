@@ -1,39 +1,56 @@
+# Blog posts App
+
 This is a Jetpack Architecture based Android App of posting and reading other users blogs.
 The App interacts with the website "open-api.xyz" (sandbox website for the App rest-api).
 
-Structure:
+## Structure:
 
-Authorizatio section -
+### Authorizatio section
 
 Login screen, 
+
 New registration screen,
+
 Forgot Password (WebView fragment)
     
-Main section - 
+### Main section
     
 Posts feed screen,
+
 Create new post screen (select photo from internal storage, crop and uplaod to the server),
+
 Account screen
 
-Main features of the App:
+### Main features of the App
+
 1. Kotlin:
+
 2. Coroutines:
 
     Advanced coroutine management using jobs
+    
     Cancelling active jobs
+    
     Coroutine scoping
+    
 3. Navigation Components:
 
     Bottom Navigation View with fragments
+    
     Leveraging multiple navigation graphs
+    
 4. Dagger 2:
 
     custom scopes, fragment injection, activity injection, Viewmodel injection
+    
 5. MVI architecture:
 
     Basically this is MVVM with some additions
+    
     State management
+    
     Building a generic BaseViewModel
+    
     Repository pattern (NetworkBoundResource)
 6. Room Persistence:
 

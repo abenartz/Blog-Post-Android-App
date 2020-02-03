@@ -7,21 +7,17 @@ The App interacts with the website "open-api.xyz" (sandbox website for the App r
 
 ### Authorizatio section
 
-Login screen, 
-
-New registration screen,
-
-Forgot Password (WebView fragment)
+* Login screen, 
+* New registration screen,
+* Forgot Password (WebView fragment)
     
 ### Main section
     
-Posts feed screen,
+* Posts feed screen,
+* Create new post screen (select photo from internal storage, crop and uplaod to the server),
+* Account screen
 
-Create new post screen (select photo from internal storage, crop and uplaod to the server),
-
-Account screen
-
-### Main features of the App
+## Main features of the App
 
 1. Kotlin:
 

@@ -5,15 +5,15 @@ Structure:
 
 Authorizatio section -
 
-    Login screen, 
-    New registration screen,
-    Forgot Password (WebView fragment)
+Login screen, 
+New registration screen,
+Forgot Password (WebView fragment)
     
 Main section - 
-
-    Posts feed screen,
-    Create new post screen (select photo from internal storage, crop and uplaod to the server),
-    Account screen
+    
+Posts feed screen,
+Create new post screen (select photo from internal storage, crop and uplaod to the server),
+Account screen
 
 Main features of the App:
 1. Kotlin:

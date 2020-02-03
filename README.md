@@ -5,7 +5,7 @@ The App interacts with the website "open-api.xyz" (sandbox website for the App r
 
 ## Structure:
 
-### Authorizatio section
+### Authorization section
 
 * Login screen
 * New registration screen

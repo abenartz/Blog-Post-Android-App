@@ -33,6 +33,7 @@ import com.example.blogposts.ui.main.blog.viewmodel.*
 import com.example.blogposts.util.ErrorHandling
 import com.example.blogposts.util.TopSpacingItemDecoration
 import kotlinx.android.synthetic.main.fragment_blog.*
+import java.util.concurrent.atomic.AtomicBoolean
 
 class BlogFragment : BaseBlogFragment(),
     BlogListAdapter.Interaction,
@@ -41,6 +42,7 @@ class BlogFragment : BaseBlogFragment(),
 
     private lateinit var recyclerAdapter: BlogListAdapter
     private lateinit var searchView: SearchView
+    private var shouldLoadFromCache = false
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -63,8 +65,14 @@ class BlogFragment : BaseBlogFragment(),
 
     override fun onResume() {
         super.onResume()
-        Log.d(TAG, "BlogFragment: onResume: refreshFromCache()")
-        viewModel.refreshFromCache()
+        if (shouldLoadFromCache) {
+            Log.d(TAG, "BlogFragment: onResume: refreshFromCache()")
+            viewModel.refreshFromCache()
+        } else {
+            Log.d(TAG, "BlogFragment: onResume: onBlogSearchOrFilter()")
+            onBlogSearchOrFilter()
+            shouldLoadFromCache = true
+        }
     }
 
     override fun onPause() {

@@ -1,6 +1,7 @@
 package com.example.blogposts.ui.main.blog.viewmodel
 
 import android.content.SharedPreferences
+import android.util.Log
 import androidx.lifecycle.LiveData
 import com.example.blogposts.persistence.BlogQueryUtils
 import com.example.blogposts.repository.main.BlogRepository
@@ -23,7 +24,7 @@ class BlogViewModel
 constructor(
     private val sessionManager: SessionManager,
     private val blogRepository: BlogRepository,
-    private val sharedPreferences: SharedPreferences,
+    sharedPreferences: SharedPreferences,
     private val editor: SharedPreferences.Editor
 ): BaseViewModel<BlogStateEvent, BlogViewState>() {
 
@@ -41,12 +42,14 @@ constructor(
                 BlogQueryUtils.BLOG_ORDER_DESC
             )
         )
+
     }
 
     override fun handleStateEvent(stateEvent: BlogStateEvent): LiveData<DataState<BlogViewState>> {
         when(stateEvent) {
 
             is BlogSearchEvent -> {
+                Log.d(TAG, "BlogFragment: viewModel: BlogSearchEvent()")
                 clearLayoutManagerState()
                 return sessionManager.cachedToken.value?.let {  authToken ->
                     blogRepository.searchBlogPosts(
